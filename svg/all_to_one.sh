@@ -16,15 +16,88 @@ function write_to_dest()
     fi
     svg_name="${SVG_DIR}/$(echo "${item}" | awk -F\" '{print $4}').svg"
     #
-    CONTENT=$(cat "${svg_name}" |sed 's/<svg/<svg width="1680" height="1680"/g' | sed 's/"/\\"/g')
+    CONTENT=$(cat "${svg_name}" | sed "s/\n//g" | sed 's/"/\\"/g')
     #
     echo "\"${code}\":\"${CONTENT}\"${divider}" >> "${DEST}"
+}
+
+function svg_in_paths()
+{
+    item="${1}"
+    divider="${2}"
+    code=$(echo "${item}" | awk -F\" '{print $2}')
+    if [ ! "${code}" ]; then
+        return
+    fi
+    svg_name="$(echo "${item}" | awk -F\" '{print $4}')"
+    # remove svg element
+    CONTENT=$(cat "${SVG_DIR}/${svg_name}.svg" | sed "s/<\/svg>//g" | sed 's/<svg xmlns="http\:\/\/www.w3.org\/2000\/svg">//g' )
+    # 
+    CONTENT=$(echo "${CONTENT}" | sed "s/<path/<path id=\"${svg_name}\"/g")
+    #
+    echo "${CONTENT}" >> "${DEST}"
+}
+
+all_to_json()
+{ 
+    #begin
+    printf "{" > "${DEST}"
+    # begin
+    echo "${MAP_STR}" | sed '$d' | while read item
+    do
+        write_to_dest "${item}" ","
+    done
+    # the last
+    item=$(echo "${MAP_STR}" | awk 'END{print}')
+    write_to_dest "${item}"
+    #end
+    printf "}" >> "${DEST}"
+}
+
+all_to_svg()
+{
+    #begin
+    printf '<svg xmlns="http://www.w3.org/2000/svg">' > "${DEST}"
+    # begin
+    echo "${MAP_STR}" | sed '$d' | while read item
+    do
+        svg_in_paths "${item}" ","
+    done
+    # the last
+    item=$(echo "${MAP_STR}" | awk 'END{print}')
+    svg_in_paths "${item}"
+    #end
+    printf '</svg>' >> "${DEST}"
+}
+
+from_allsvg_to_single()
+{
+    DEST_DIR="svgs"
+    if [ ! -d "${DEST_DIR}" ]; then
+        mkdir "${DEST_DIR}"
+    fi
+    #
+    HEADER="$(echo "${MAP_STR}" | grep '<svg')"
+    #
+    MAP_STR="$(echo "${MAP_STR}" | grep "<path")"
+
+    echo "${MAP_STR}" | while read item
+    do
+        unicode=$(echo "${item}" | awk -F\" '{print $2}' | awk -F_ '{print $1}' )
+        echo "unicode = ${unicode}"
+        dest_file_path="${DEST_DIR}/${unicode}.svg"
+        if [ -f "${dest_file_path}" ]; then
+            echo
+        fi
+        SVG_CONTENT=$(echo "${HEADER}${item}</svg>" )
+        echo "${SVG_CONTENT}"  > "${dest_file_path}"
+    done
 }
 
 ##
 MAP="${1}"
 DEST="${2}"
-SVG_DIR="singles"
+SVG_DIR="svgs"
 MAP_STR=$(cat "${MAP}")
 
 if [ ! "${DEST}" ]; then
@@ -35,23 +108,9 @@ if [ -f "${DEST}" ]; then
     rm "${DEST}"
 fi
 
-#begin
-printf "{" > "${DEST}"
-# begin
-echo "${MAP_STR}" | sed '$d' | while read item
-do
-    write_to_dest "${item}" ","
-done
-# the last
-item=$(echo "${MAP_STR}" | awk 'END{print}')
-write_to_dest "${item}"
-#end
-printf "}" >> "${DEST}"
+#
+# all_to_svg
+# from_allsvg_to_single
+all_to_json
 
-# ls "${SVG_DIR}" | while read files
-# do
-#     CONTENT=$(cat "${SVG_DIR}/${files}" | sed 's/"/\\"/g')
-#     NAME="${files%.*}"
-#     echo "${NAME}   code=$(get_code "${NAME}")"
-#     # echo "${CONTENT}"
-# done
+
