@@ -16,7 +16,7 @@ function write_to_dest()
     fi
     svg_name="${SVG_DIR}/$(echo "${item}" | awk -F\" '{print $4}').svg"
     #
-    CONTENT=$(cat "${svg_name}" | sed 's/"/\\"/g')
+    CONTENT=$(cat "${svg_name}" |sed 's/<svg/<svg width="1680" height="1680"/g' | sed 's/"/\\"/g')
     #
     echo "\"${code}\":\"${CONTENT}\"${divider}" >> "${DEST}"
 }
