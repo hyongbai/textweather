@@ -1,5 +1,5 @@
 #!/bin/bash
-URLS=('git@gitcafe.com:hyongbai/textweather.git','git@github.com:hyongbai/textweather.git')
+URLS=('git@gitcafe.com:hyongbai/textweather.git' 'git@github.com:hyongbai/textweather.git')
 #sed -i '' 's/"official"/"'$CH'"/g'
 
 COMMENT="${1}"
@@ -17,8 +17,8 @@ git commit -m "${COMMENT}"
 for URL in "${URLS[@]}"
 do
     echo "change remote url to ${URL}"
-    git remote set-url origin "${URL}"
-    git push
+    # git remote set-url origin "${URL}"
+    # git push
 done
 
 echo "DONE!!!"
