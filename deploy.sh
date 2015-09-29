@@ -17,8 +17,8 @@ git commit -m "${COMMENT}"
 for URL in "${URLS[@]}"
 do
     echo "change remote url to ${URL}"
-    # git remote set-url origin "${URL}"
-    # git push
+    git remote set-url origin "${URL}"
+    git push
 done
 
 echo "DONE!!!"
