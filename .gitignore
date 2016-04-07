@@ -4,7 +4,7 @@
 # generated files
 bin/
 gen/
-*.apk
+#*.apk
 *.ap_
 *.dex
 *.iml
